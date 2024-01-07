@@ -4,6 +4,8 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.view.View;
 import android.widget.AdapterView;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.GridView;
 import android.widget.Toast;
 
@@ -29,15 +31,19 @@ public class MainActivity extends AppCompatActivity {
     private List<String> imgUrls = new ArrayList<>();
     private List<File> imgFiles = new ArrayList<>();
 
-    // Debug Only
-    String url = "https://stocksnap.io/";
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        getImgSrcfromUrl(url);
+        EditText urlField = findViewById(R.id.urlField);
+        Button urlBtn = findViewById(R.id.urlButton);
+        urlBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                getImgSrcfromUrl(urlField.getText().toString());
+            }
+        });
     }
 
     protected void getImgSrcfromUrl(String url) {
