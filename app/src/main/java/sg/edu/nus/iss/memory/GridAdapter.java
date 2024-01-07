@@ -23,7 +23,7 @@ public class GridAdapter extends ArrayAdapter<Object> {
         super(ctx, R.layout.grid_cell);
         this.context = ctx;
         this.images = images;
-        addAll(new Object[images.size()]);   // Specify total no. of cells in grid
+        addAll(new Object[20]);   // Specify total no. of cells in grid
     }
 
     public View getView(int pos, View view, @NonNull ViewGroup parent) {

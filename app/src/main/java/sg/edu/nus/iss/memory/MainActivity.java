@@ -1,5 +1,6 @@
 package sg.edu.nus.iss.memory;
 
+import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Environment;
 import android.view.View;
@@ -30,6 +31,10 @@ public class MainActivity extends AppCompatActivity {
     private final int MAX_IMAGES = 20;
     private List<String> imgUrls = new ArrayList<>();
     private List<File> imgFiles = new ArrayList<>();
+    private List<Integer> selectedIds = new ArrayList<>();
+
+    // https://stocksnap.io/
+    // https://www.istockphoto.com/photos/new-year
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,6 +53,8 @@ public class MainActivity extends AppCompatActivity {
 
     protected void getImgSrcfromUrl(String url) {
         imgUrls.clear();
+        imgFiles.clear();
+
         // Throws NetworkOnMainThreadException if not run on new Thread
         new Thread(new Runnable() {
             @Override
@@ -83,8 +90,6 @@ public class MainActivity extends AppCompatActivity {
         }
 
         File dir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
-
-
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -129,6 +134,8 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    // Bug: Do not create new adapater for gridview if download is clicked again
+    // https://stackoverflow.com/questions/11786050/refresh-listview-from-arrayadapter
     protected void updateGridView() {
         GridAdapter adapter = new GridAdapter(this, imgFiles);
         GridView gridView = findViewById(R.id.gridView);
@@ -137,7 +144,15 @@ public class MainActivity extends AppCompatActivity {
             gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                 @Override
                 public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                    // Select Image
+                    if (!selectedIds.contains(i)) {
+                        selectedIds.add(i);
+                        view.setBackgroundColor(Color.parseColor("#BF4F51"));
+                    } else {
+                        selectedIds.remove(Integer.valueOf(i));
+                        view.setBackgroundColor(Color.parseColor("#00FFFFFF"));
+                    }
+
+
                 }
             });
         }

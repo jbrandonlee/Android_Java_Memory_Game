@@ -14,10 +14,13 @@
         android:layout_height="0dp"
         android:orientation="horizontal"
         android:gravity="center"
-        app:layout_constraintBottom_toTopOf="@id/gridView"
+        app:layout_constraintBottom_toTopOf="@id/selectedText"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
+
+        <!-- https://stocksnap.io/ -->
+        <!-- https://www.istockphoto.com/photos/new-year -->
 
         <EditText
             android:id="@+id/urlField"
@@ -25,7 +28,7 @@
             android:layout_height="32dp"
             android:layout_weight="1"
             android:background="@drawable/input_field_border"
-            android:hint="Enter URL here"
+            android:hint="@string/url_field_hint"
             android:text="https://stocksnap.io/"
             android:textSize="14sp"
             android:paddingHorizontal="10dp"
@@ -35,7 +38,7 @@
             android:id="@+id/urlButton"
             android:layout_width="wrap_content"
             android:layout_height="32dp"
-            android:text="Download"
+            android:text="@string/download"
             android:textSize="14sp"
             android:textColor="#FFF"
             android:background="#0d6efd"
@@ -45,17 +48,31 @@
 
     </LinearLayout>
 
+    <TextView
+        android:id="@+id/selectedText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingEnd="5dp"
+        android:paddingBottom="5dp"
+        android:text="Selected: 0/6"
+        android:gravity="end"
+        app:layout_constraintBottom_toTopOf="@id/gridView"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/header"
+        />
+
     <GridView
         android:id="@+id/gridView"
-        android:layout_width="match_parent"
-        android:layout_height="400dp"
-        android:horizontalSpacing="3dp"
+        android:layout_width="364dp"
+        android:layout_height="454dp"
+        android:padding="2dp"
         android:background="#C3B091"
         android:numColumns="4"
         app:layout_constraintBottom_toTopOf="@id/footer"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/header" />
+        app:layout_constraintTop_toBottomOf="@id/selectedText" />
 
     <LinearLayout
         android:id="@+id/footer"
@@ -71,7 +88,7 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="footer"
+            android:text="Progress bar goes here"
             android:padding="15dp"/>
 
     </LinearLayout>
