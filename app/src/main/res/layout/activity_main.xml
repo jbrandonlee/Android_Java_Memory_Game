@@ -14,10 +14,10 @@
         android:layout_height="0dp"
         android:orientation="horizontal"
         android:gravity="center"
+        app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toTopOf="@id/selectedText"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+        app:layout_constraintStart_toStartOf="parent" >
 
         <!-- https://stocksnap.io/ -->
         <!-- https://www.istockphoto.com/photos/new-year -->
@@ -56,23 +56,47 @@
         android:paddingBottom="5dp"
         android:text="Selected: 0/6"
         android:gravity="end"
+        app:layout_constraintTop_toBottomOf="@id/header"
         app:layout_constraintBottom_toTopOf="@id/gridView"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/header"
-        />
+        app:layout_constraintStart_toStartOf="parent" />
 
     <GridView
         android:id="@+id/gridView"
-        android:layout_width="364dp"
-        android:layout_height="454dp"
+        android:layout_width="360dp"
+        android:layout_height="450dp"
         android:padding="2dp"
         android:background="#C3B091"
         android:numColumns="4"
+        app:layout_constraintTop_toBottomOf="@id/selectedText"
+        app:layout_constraintBottom_toTopOf="@id/navLayout"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <LinearLayout
+        android:id="@+id/navLayout"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:orientation="horizontal"
+        android:gravity="center|end"
+        app:layout_constraintTop_toBottomOf="@id/gridView"
         app:layout_constraintBottom_toTopOf="@id/footer"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/selectedText" />
+        app:layout_constraintStart_toStartOf="parent" >
+
+        <Button
+            android:id="@+id/playButton"
+            android:layout_width="wrap_content"
+            android:layout_height="32dp"
+            android:text="@string/play"
+            android:textSize="14sp"
+            android:textColor="#AAA"
+            android:background="#DDD"
+            android:paddingHorizontal="10dp"
+            android:paddingVertical="5dp"
+            android:layout_marginStart="5dp"/>
+
+    </LinearLayout>
 
     <LinearLayout
         android:id="@+id/footer"
@@ -80,10 +104,10 @@
         android:layout_height="0dp"
         android:orientation="vertical"
         android:gravity="center"
+        app:layout_constraintTop_toBottomOf="@id/navLayout"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/gridView" >
+        app:layout_constraintStart_toStartOf="parent" >
 
         <TextView
             android:layout_width="match_parent"

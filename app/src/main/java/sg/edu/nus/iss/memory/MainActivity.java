@@ -1,5 +1,6 @@
 package sg.edu.nus.iss.memory;
 
+import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Environment;
@@ -33,6 +34,10 @@ public class MainActivity extends AppCompatActivity {
     private List<File> imgFiles = new ArrayList<>();
     private List<Integer> selectedIds = new ArrayList<>();
 
+    EditText mUrlField;
+    Button mUrlBtn;
+    Button mPlayBtn;
+
     // https://stocksnap.io/
     // https://www.istockphoto.com/photos/new-year
 
@@ -41,14 +46,37 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        EditText urlField = findViewById(R.id.urlField);
-        Button urlBtn = findViewById(R.id.urlButton);
-        urlBtn.setOnClickListener(new View.OnClickListener() {
+        mUrlField = findViewById(R.id.urlField);
+        mUrlBtn = findViewById(R.id.urlButton);
+        mUrlBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                getImgSrcfromUrl(urlField.getText().toString());
+                getImgSrcfromUrl(mUrlField.getText().toString());
             }
         });
+
+        mPlayBtn = findViewById(R.id.playButton);
+        mPlayBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(MainActivity.this, GameActivity.class);
+                intent.putIntegerArrayListExtra("imgIds", (ArrayList<Integer>) selectedIds);
+                startActivity(intent);
+            }
+        });
+        togglePlayBtn(false);
+
+    }
+
+    protected void togglePlayBtn(boolean enabled) {
+        if (enabled) {
+            mPlayBtn.setBackgroundColor(Color.parseColor("#90EE90"));
+            mPlayBtn.setTextColor(Color.parseColor("#000000"));
+        } else {
+            mPlayBtn.setBackgroundColor(Color.parseColor("#AAAAAA"));
+            mPlayBtn.setTextColor(Color.parseColor("#DDDDDD"));
+        }
+        mPlayBtn.setEnabled(enabled);
     }
 
     protected void getImgSrcfromUrl(String url) {
@@ -134,7 +162,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    // Bug: Do not create new adapater for gridview if download is clicked again
+    // Bug: Do not create new adapter for gridview if download is clicked again
     // https://stackoverflow.com/questions/11786050/refresh-listview-from-arrayadapter
     protected void updateGridView() {
         GridAdapter adapter = new GridAdapter(this, imgFiles);
@@ -149,10 +177,14 @@ public class MainActivity extends AppCompatActivity {
                         view.setBackgroundColor(Color.parseColor("#BF4F51"));
                     } else {
                         selectedIds.remove(Integer.valueOf(i));
-                        view.setBackgroundColor(Color.parseColor("#00FFFFFF"));
+                        view.setBackgroundColor(Color.TRANSPARENT);
                     }
 
-
+                    if (selectedIds.size() == 6) {
+                        togglePlayBtn(true);
+                    } else {
+                        togglePlayBtn(false);
+                    }
                 }
             });
         }

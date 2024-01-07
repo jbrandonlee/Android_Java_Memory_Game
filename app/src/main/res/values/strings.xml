@@ -2,4 +2,8 @@
     <string name="app_name">Memory Game</string>
     <string name="download">Download</string>
     <string name="url_field_hint">Enter URL here</string>
+    <string name="play">Play</string>
+    <string name="default_score_text">0 out of 6 matches</string>
+    <string name="default_timer_text">00:00:00</string>
+    <string name="back">Back</string>
 </resources>
