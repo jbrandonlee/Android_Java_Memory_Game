@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Handler;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.Button;
@@ -17,6 +18,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 
 public class GameActivity extends AppCompatActivity {
 
@@ -24,20 +26,24 @@ public class GameActivity extends AppCompatActivity {
     private List<Integer> gridAnswers = new ArrayList<>();
     private List<File> imgFiles = new ArrayList<>();
 
-    private TextView scoreText;
-    private Button endButton;
+    private TextView mTimerText;
+    private TextView mScoreText;
+    private Button mEndButton;
 
-    private int selectedId = -1;
-    private int score = 0;
     private final int MAX_SCORE = 6;
+    private int score = 0;
+    private int seconds = 0;
+    private int selectedId = -1;
+    private boolean gameRunning = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_game);
-        scoreText = findViewById(R.id.scoreText);
-        endButton = findViewById(R.id.endButton);
-        endButton.setOnClickListener(new View.OnClickListener() {
+        mTimerText = findViewById(R.id.timerText);
+        mScoreText = findViewById(R.id.scoreText);
+        mEndButton = findViewById(R.id.endButton);
+        mEndButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 // TODO: Prompt player before ending game with AlertDialog.Builder
@@ -54,6 +60,9 @@ public class GameActivity extends AppCompatActivity {
         generateGridFiles();
         updateGridView();
         updateScore(0);
+        updateTimer(0);
+        gameRunning = true;
+        runTimer();
     }
 
     protected void endGame() {
@@ -65,8 +74,32 @@ public class GameActivity extends AppCompatActivity {
         finish();
     }
 
+    protected void runTimer() {
+        Handler handler = new Handler();
+        handler.post(new Runnable() {
+            @Override
+            public void run() {
+                if (gameRunning) {
+                    seconds++;
+                }
+                updateTimer(seconds);
+                handler.postDelayed(this, 1000);
+            }
+        });
+    }
+
+    protected void updateTimer(int seconds) {
+        this.seconds = seconds;
+        int hours = seconds / 3600;
+        int minutes = (seconds % 3600) / 60;
+        int secs = seconds % 60;
+        String time = String.format(Locale.getDefault(),"%02d:%02d:%02d", hours, minutes, secs);
+        mTimerText.setText(time);
+    }
+
     protected void updateScore(int score) {
-        scoreText.setText(score + " out of 6 matches");
+        this.score = score;
+        mScoreText.setText(score + " out of 6 matches");
     }
 
     protected void getDataFromIntent() {
@@ -107,6 +140,7 @@ public class GameActivity extends AppCompatActivity {
         if (gridAnswers.get(firstId) == gridAnswers.get(secondId)) {
             // TODO: ANIMATE GREEN TINT
             // TODO: Play SFX_SUCCESS
+            // TODO: Disable ImageViews
             Toast.makeText(this, "CORRECT", Toast.LENGTH_LONG).show();
             score++;
             updateScore(score);
@@ -121,6 +155,7 @@ public class GameActivity extends AppCompatActivity {
         }
     }
 
+    // TODO: REFACTOR THIS
     protected void updateGridView() {
         GridAdapter adapter = new GridAdapter(this, imgFiles);
         GridView gridView = findViewById(R.id.gridView);
