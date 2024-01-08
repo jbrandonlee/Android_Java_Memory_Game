@@ -36,6 +36,8 @@ public class MainActivity extends AppCompatActivity {
     private List<File> imgFiles = new ArrayList<>();
     private List<Integer> selectedIds = new ArrayList<>();
 
+    GridAdapter mGridAdapter;
+    GridView mGridView;
     TextView mSelectedText;
     EditText mUrlField;
     TextView mDownloadText;
@@ -54,7 +56,31 @@ public class MainActivity extends AppCompatActivity {
     }
 
     protected void initViews() {
+        mGridAdapter = new GridAdapter(this, imgFiles);
+        mGridView = findViewById(R.id.gridView);
+        mGridView.setAdapter(mGridAdapter);
+        mGridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                if (!selectedIds.contains(i)) {
+                    selectedIds.add(i);
+                    view.setBackgroundColor(Color.parseColor("#BF4F51"));
+                } else {
+                    selectedIds.remove(Integer.valueOf(i));
+                    view.setBackgroundColor(Color.TRANSPARENT);
+                }
+                updateSelected(selectedIds.size());
+
+                if (selectedIds.size() == 6) {
+                    togglePlayBtn(true);
+                } else {
+                    togglePlayBtn(false);
+                }
+            }
+        });
+
         mSelectedText = findViewById(R.id.selectedText);
+        mSelectedText.setVisibility(View.INVISIBLE);
         mUrlField = findViewById(R.id.urlField);
 
         mDownloadText = findViewById(R.id.downloadText);
@@ -81,17 +107,6 @@ public class MainActivity extends AppCompatActivity {
         togglePlayBtn(false);
     }
 
-    protected void togglePlayBtn(boolean enabled) {
-        if (enabled) {
-            mPlayBtn.setBackgroundColor(Color.parseColor("#90EE90"));
-            mPlayBtn.setTextColor(Color.parseColor("#000000"));
-        } else {
-            mPlayBtn.setBackgroundColor(Color.parseColor("#AAAAAA"));
-            mPlayBtn.setTextColor(Color.parseColor("#DDDDDD"));
-        }
-        mPlayBtn.setEnabled(enabled);
-    }
-
     protected void getImgSrcfromUrl(String url) {
         imgUrls.clear();
         imgFiles.clear();
@@ -110,6 +125,7 @@ public class MainActivity extends AppCompatActivity {
                         if (isValidImgSrc(src))
                             imgUrls.add(src);
 
+                        // Stop once enough valid ImageUrls are found
                         if (imgUrls.size() >= MAX_IMAGES)
                             break;
                     }
@@ -181,34 +197,9 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    // Bug: Do not create new adapter for gridview if download is clicked again
-    // https://stackoverflow.com/questions/11786050/refresh-listview-from-arrayadapter
+    // -- View Management --
     protected void updateGridView() {
-        GridAdapter adapter = new GridAdapter(this, imgFiles);
-        GridView gridView = findViewById(R.id.gridView);
-        if (gridView != null) {
-            gridView.setAdapter(adapter);
-            gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-                @Override
-                public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                    if (!selectedIds.contains(i)) {
-                        selectedIds.add(i);
-                        view.setBackgroundColor(Color.parseColor("#BF4F51"));
-                    } else {
-                        selectedIds.remove(Integer.valueOf(i));
-                        view.setBackgroundColor(Color.TRANSPARENT);
-                    }
-
-                    updateSelected(selectedIds.size());
-
-                    if (selectedIds.size() == 6) {
-                        togglePlayBtn(true);
-                    } else {
-                        togglePlayBtn(false);
-                    }
-                }
-            });
-        }
+        mGridAdapter.updateImages(imgFiles);
     }
 
     protected void updateSelected(int count) {
@@ -222,7 +213,19 @@ public class MainActivity extends AppCompatActivity {
 
         if (count == MAX_IMAGES) {
             mDownloadText.setText("Download Complete " + count + "/" + MAX_IMAGES);
+            mSelectedText.setVisibility(View.VISIBLE);
         }
+    }
+
+    protected void togglePlayBtn(boolean enabled) {
+        if (enabled) {
+            mPlayBtn.setBackgroundColor(Color.parseColor("#90EE90"));
+            mPlayBtn.setTextColor(Color.parseColor("#000000"));
+        } else {
+            mPlayBtn.setBackgroundColor(Color.parseColor("#AAAAAA"));
+            mPlayBtn.setTextColor(Color.parseColor("#DDDDDD"));
+        }
+        mPlayBtn.setEnabled(enabled);
     }
 
     // -- Helper Functions --

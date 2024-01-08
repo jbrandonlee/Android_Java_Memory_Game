@@ -23,6 +23,12 @@ public class GridAdapter extends ArrayAdapter<Object> {
         super(ctx, R.layout.grid_cell);
         this.context = ctx;
         this.images = images;
+        addAll(new Object[images.size()]);
+    }
+
+    public void updateImages(List<File> images) {
+        this.images = images;
+        clear();
         addAll(new Object[images.size()]);   // Specify total no. of cells in grid
     }
 
