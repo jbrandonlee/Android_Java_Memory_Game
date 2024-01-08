@@ -2,6 +2,7 @@ package sg.edu.nus.iss.memory;
 
 import android.content.Intent;
 import android.graphics.Color;
+import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.Environment;
 import android.view.View;
@@ -49,6 +50,8 @@ public class MainActivity extends AppCompatActivity {
     private Button mDownloadBtn;
     private Button mPlayBtn;
 
+    private MediaPlayer bgmPlayer;
+
     // -- Demo Details --
     // Insufficient Images:  https://blank.page/
     // Connection Failed: https://qwerty/
@@ -60,6 +63,21 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         initViews();
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        bgmPlayer = MediaPlayer.create(this, R.raw.bgm_main);
+        bgmPlayer.setLooping(true);
+        bgmPlayer.start();
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        bgmPlayer.stop();
+        bgmPlayer.release();
     }
 
     // -- Initialize Views --

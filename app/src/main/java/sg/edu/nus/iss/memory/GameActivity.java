@@ -3,6 +3,7 @@ package sg.edu.nus.iss.memory;
 import android.animation.AnimatorInflater;
 import android.animation.AnimatorSet;
 import android.content.Intent;
+import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
@@ -34,6 +35,7 @@ public class GameActivity extends AppCompatActivity {
     private Button mEndButton;
 
     private AnimatorSet inLeftSet;
+    private MediaPlayer bgmPlayer;
 
     private final int MAX_SCORE = 6;
     private int score = 0;
@@ -47,6 +49,21 @@ public class GameActivity extends AppCompatActivity {
         setContentView(R.layout.activity_game);
         initViews();
         initGame();
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        bgmPlayer = MediaPlayer.create(this, R.raw.bgm_game);
+        bgmPlayer.setLooping(true);
+        bgmPlayer.start();
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        bgmPlayer.stop();
+        bgmPlayer.release();
     }
 
     protected void initViews() {
@@ -168,7 +185,7 @@ public class GameActivity extends AppCompatActivity {
                     flipCard(mGridView.getChildAt(firstId));
                     flipCard(mGridView.getChildAt(secondId));
                 }
-            }, 1000);
+            }, 500);
         }
     }
 
