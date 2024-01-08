@@ -69,7 +69,6 @@ public class GameActivity extends AppCompatActivity {
         scoreText.setText(score + " out of 6 matches");
     }
 
-
     protected void getDataFromIntent() {
         Intent intent = getIntent();
         imgIds = intent.getIntegerArrayListExtra("imgIds");

@@ -9,6 +9,8 @@ import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.GridView;
+import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -34,7 +36,10 @@ public class MainActivity extends AppCompatActivity {
     private List<File> imgFiles = new ArrayList<>();
     private List<Integer> selectedIds = new ArrayList<>();
 
+    TextView mSelectedText;
     EditText mUrlField;
+    TextView mDownloadText;
+    ProgressBar mDownloadProgress;
     Button mUrlBtn;
     Button mPlayBtn;
 
@@ -45,8 +50,17 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        initViews();
+    }
 
+    protected void initViews() {
+        mSelectedText = findViewById(R.id.selectedText);
         mUrlField = findViewById(R.id.urlField);
+
+        mDownloadText = findViewById(R.id.downloadText);
+        mDownloadProgress = findViewById(R.id.downloadProgress);
+        mDownloadProgress.setVisibility(View.INVISIBLE);
+
         mUrlBtn = findViewById(R.id.urlButton);
         mUrlBtn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -65,7 +79,6 @@ public class MainActivity extends AppCompatActivity {
             }
         });
         togglePlayBtn(false);
-
     }
 
     protected void togglePlayBtn(boolean enabled) {
@@ -125,6 +138,12 @@ public class MainActivity extends AppCompatActivity {
                     File destFile = new File(dir, i + ".jpg");
                     if (downloadImage(imgUrls.get(i), destFile)) {
                         imgFiles.add(destFile);
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                updateProgress(imgFiles.size());
+                            }
+                        });
                     }
                 }
                 runOnUiThread(new Runnable() {
@@ -180,6 +199,8 @@ public class MainActivity extends AppCompatActivity {
                         view.setBackgroundColor(Color.TRANSPARENT);
                     }
 
+                    updateSelected(selectedIds.size());
+
                     if (selectedIds.size() == 6) {
                         togglePlayBtn(true);
                     } else {
@@ -187,6 +208,20 @@ public class MainActivity extends AppCompatActivity {
                     }
                 }
             });
+        }
+    }
+
+    protected void updateSelected(int count) {
+        mSelectedText.setText("Selected: " + count + "/" + MIN_IMAGES);
+    }
+
+    protected void updateProgress(int count) {
+        mDownloadProgress.setVisibility(View.VISIBLE);
+        mDownloadProgress.setProgress(count);
+        mDownloadText.setText("Downloading... " + count + "/" + MAX_IMAGES);
+
+        if (count == MAX_IMAGES) {
+            mDownloadText.setText("Download Complete " + count + "/" + MAX_IMAGES);
         }
     }
 

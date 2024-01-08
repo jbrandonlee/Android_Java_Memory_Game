@@ -110,10 +110,19 @@
         app:layout_constraintStart_toStartOf="parent" >
 
         <TextView
+            android:id="@+id/downloadText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Progress bar goes here"
-            android:padding="15dp"/>
+            android:text=""
+            android:paddingBottom="5dp"/>
+
+        <ProgressBar
+            android:id="@+id/downloadProgress"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:progress="0"
+            android:max="20"
+            style="@android:style/Widget.Material.Light.ProgressBar.Horizontal" />
 
     </LinearLayout>
 
