@@ -24,6 +24,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InterruptedIOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
@@ -36,17 +37,23 @@ public class MainActivity extends AppCompatActivity {
     private List<File> imgFiles = new ArrayList<>();
     private List<Integer> selectedIds = new ArrayList<>();
 
+    private Thread urlThread;
+    private Thread fileThread;
+
     GridAdapter mGridAdapter;
     GridView mGridView;
     TextView mSelectedText;
     EditText mUrlField;
     TextView mDownloadText;
     ProgressBar mDownloadProgress;
-    Button mUrlBtn;
+    Button mDownloadBtn;
     Button mPlayBtn;
 
-    // https://stocksnap.io/
-    // https://www.istockphoto.com/photos/new-year
+    // -- Demo Details --
+    // Insufficient Images:  https://blank.page/
+    // Connection Failed: https://qwerty/
+    // Working: https://stocksnap.io/
+    // Working: https://www.istockphoto.com/photos/new-year
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -55,7 +62,47 @@ public class MainActivity extends AppCompatActivity {
         initViews();
     }
 
+    // -- Initialize Views --
     protected void initViews() {
+        initGridAdapter();
+
+        mSelectedText = findViewById(R.id.selectedText);
+        mSelectedText.setVisibility(View.INVISIBLE);
+        mUrlField = findViewById(R.id.urlField);
+
+        mDownloadText = findViewById(R.id.downloadText);
+        mDownloadProgress = findViewById(R.id.downloadProgress);
+        mDownloadProgress.setVisibility(View.INVISIBLE);
+        mDownloadBtn = findViewById(R.id.downloadButton);
+        mDownloadBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                // Interrupt Ongoing Threads (if any)
+                if (urlThread != null) {
+                    urlThread.interrupt();
+                }
+                if (fileThread != null) {
+                    fileThread.interrupt();
+                }
+                // Start Download
+                getImgUrlfromWeb(mUrlField.getText().toString());
+            }
+        });
+
+        mPlayBtn = findViewById(R.id.playButton);
+        mPlayBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                // Start Game
+                Intent intent = new Intent(MainActivity.this, GameActivity.class);
+                intent.putIntegerArrayListExtra("imgIds", (ArrayList<Integer>) selectedIds);
+                startActivity(intent);
+            }
+        });
+        togglePlayBtn(false);
+    }
+
+    protected void initGridAdapter() {
         mGridAdapter = new GridAdapter(this, imgFiles);
         mGridView = findViewById(R.id.gridView);
         mGridView.setAdapter(mGridAdapter);
@@ -70,73 +117,48 @@ public class MainActivity extends AppCompatActivity {
                     view.setBackgroundColor(Color.TRANSPARENT);
                 }
                 updateSelected(selectedIds.size());
-
-                if (selectedIds.size() == 6) {
-                    togglePlayBtn(true);
-                } else {
-                    togglePlayBtn(false);
-                }
+                togglePlayBtn(selectedIds.size() == 6);
             }
         });
-
-        mSelectedText = findViewById(R.id.selectedText);
-        mSelectedText.setVisibility(View.INVISIBLE);
-        mUrlField = findViewById(R.id.urlField);
-
-        mDownloadText = findViewById(R.id.downloadText);
-        mDownloadProgress = findViewById(R.id.downloadProgress);
-        mDownloadProgress.setVisibility(View.INVISIBLE);
-
-        mUrlBtn = findViewById(R.id.urlButton);
-        mUrlBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                getImgSrcfromUrl(mUrlField.getText().toString());
-            }
-        });
-
-        mPlayBtn = findViewById(R.id.playButton);
-        mPlayBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent intent = new Intent(MainActivity.this, GameActivity.class);
-                intent.putIntegerArrayListExtra("imgIds", (ArrayList<Integer>) selectedIds);
-                startActivity(intent);
-            }
-        });
-        togglePlayBtn(false);
     }
 
-    protected void getImgSrcfromUrl(String url) {
-        imgUrls.clear();
-        imgFiles.clear();
+    // -- Image Download --
+    protected void getImgUrlfromWeb(String webUrl) {
+        resetDataAndView();
 
-        // Throws NetworkOnMainThreadException if not run on new Thread
-        new Thread(new Runnable() {
+        urlThread = new Thread(new Runnable() {
             @Override
             public void run() {
                 try {
-                    Document document = Jsoup.connect(url).get();
+                    Document document = Jsoup.connect(webUrl).get();
                     Elements imgElements = document.getElementsByTag("img");
 
                     // Check if src from 'img' elements are valid
                     for (Element elem : imgElements) {
+                        if (Thread.interrupted()) {
+                            System.out.println("URL Thread Interrupted");
+                            return;
+                        }
+
                         String src = elem.absUrl("src");
-                        if (isValidImgSrc(src))
+                        if (isValidImgSrc(src)) {
+                            // System.out.println("Found Image: " + src);
                             imgUrls.add(src);
+                        }
 
                         // Stop once enough valid ImageUrls are found
-                        if (imgUrls.size() >= MAX_IMAGES)
+                        if (imgUrls.size() == MAX_IMAGES) {
+                            startDownloadImages(imgUrls);
                             break;
+                        }
                     }
-
-                    startDownloadImages(imgUrls);
                 } catch (IOException e) {
-                    System.out.println(e.getMessage());
+                    e.printStackTrace();
                     makeUIThreadToast("Failed to connect to URL");
                 }
             }
-        }).start();
+        });
+        urlThread.start();
     }
 
     protected void startDownloadImages(List<String> imgUrls) {
@@ -146,34 +168,39 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
-        File dir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
-        new Thread(new Runnable() {
+        fileThread = new Thread(new Runnable() {
             @Override
             public void run() {
+                File dir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
                 for (int i = 0; i < imgUrls.size(); i++) {
+                    if (Thread.interrupted()) {
+                        System.out.println("File Thread Interrupted");
+                        return;
+                    }
                     File destFile = new File(dir, i + ".jpg");
-                    if (downloadImage(imgUrls.get(i), destFile)) {
-                        imgFiles.add(destFile);
-                        runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                updateProgress(imgFiles.size());
-                            }
-                        });
+                    try {
+                        if (downloadImage(imgUrls.get(i), destFile)) {
+                            imgFiles.add(destFile);
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    updateProgress(imgFiles.size());
+                                    updateGridView();
+                                }
+                            });
+                        }
+                    } catch (InterruptedIOException e) {
+                        System.out.println("File Thread Interrupted from Exception");
+                        return;
                     }
                 }
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        updateGridView();
-                    }
-                });
             }
-        }).start();
+        });
+        fileThread.start();
     }
 
-    protected boolean downloadImage(String imgUrl, File destFile) {
-        System.out.println("Downloading: " + imgUrl);
+    protected boolean downloadImage(String imgUrl, File destFile) throws InterruptedIOException {
+        // System.out.println("Downloading: " + imgUrl);
         try {
             URL url = new URL(imgUrl);
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
@@ -190,14 +217,24 @@ public class MainActivity extends AppCompatActivity {
             out.close();
             in.close();
             return true;
+        } catch (InterruptedIOException e) {
+            throw new InterruptedIOException();
         } catch (Exception e) {
-            System.out.println("Download FAILED");
             e.printStackTrace();
             return false;
         }
     }
 
     // -- View Management --
+    protected void resetDataAndView() {
+        imgUrls.clear();
+        imgFiles.clear();
+        updateGridView();
+        mDownloadText.setText("");
+        mDownloadProgress.setVisibility(View.INVISIBLE);
+        mSelectedText.setVisibility(View.INVISIBLE);
+    }
+
     protected void updateGridView() {
         mGridAdapter.updateImages(imgFiles);
     }
@@ -208,7 +245,7 @@ public class MainActivity extends AppCompatActivity {
 
     protected void updateProgress(int count) {
         mDownloadProgress.setVisibility(View.VISIBLE);
-        mDownloadProgress.setProgress(count);
+        mDownloadProgress.setProgress(MAX_IMAGES);
         mDownloadText.setText("Downloading... " + count + "/" + MAX_IMAGES);
 
         if (count == MAX_IMAGES) {
@@ -229,13 +266,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     // -- Helper Functions --
-    protected void printImgUrls() {
-        System.out.println(imgUrls.size() + " images found.");
-        for (String url : imgUrls) {
-            System.out.println(url);
-        }
-    }
-
     protected static boolean isValidImgSrc(String imgUrl) {
         if (imgUrl.indexOf('?') > 0)
             imgUrl = imgUrl.substring(0, imgUrl.indexOf('?'));
