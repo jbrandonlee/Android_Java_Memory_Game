@@ -40,14 +40,14 @@ public class MainActivity extends AppCompatActivity {
     private Thread urlThread;
     private Thread fileThread;
 
-    GridAdapter mGridAdapter;
-    GridView mGridView;
-    TextView mSelectedText;
-    EditText mUrlField;
-    TextView mDownloadText;
-    ProgressBar mDownloadProgress;
-    Button mDownloadBtn;
-    Button mPlayBtn;
+    private GridAdapter mGridAdapter;
+    private GridView mGridView;
+    private TextView mSelectedText;
+    private EditText mUrlField;
+    private TextView mDownloadText;
+    private ProgressBar mDownloadProgress;
+    private Button mDownloadBtn;
+    private Button mPlayBtn;
 
     // -- Demo Details --
     // Insufficient Images:  https://blank.page/

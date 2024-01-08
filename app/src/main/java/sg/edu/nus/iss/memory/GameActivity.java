@@ -10,7 +10,6 @@ import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.GridView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -26,6 +25,8 @@ public class GameActivity extends AppCompatActivity {
     private List<Integer> gridAnswers = new ArrayList<>();
     private List<File> imgFiles = new ArrayList<>();
 
+    private GridAdapter mGridAdapter;
+    private GridView mGridView;
     private TextView mTimerText;
     private TextView mScoreText;
     private Button mEndButton;
@@ -40,6 +41,12 @@ public class GameActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_game);
+        initViews();
+        initGame();
+    }
+
+    protected void initViews() {
+        initGridAdapter();
         mTimerText = findViewById(R.id.timerText);
         mScoreText = findViewById(R.id.scoreText);
         mEndButton = findViewById(R.id.endButton);
@@ -50,8 +57,35 @@ public class GameActivity extends AppCompatActivity {
                 endGame();
             }
         });
+    }
 
-        initGame();
+    protected void initGridAdapter() {
+        mGridAdapter = new GridAdapter(this, imgFiles);
+        mGridView = findViewById(R.id.gridView);
+        mGridView.setAdapter(mGridAdapter);
+        mGridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                // Gameplay
+                if (selectedId == -1) {
+                    // Player is selecting first tile
+                    selectedId = i;
+                    setSelected(view, true);
+                } else if (selectedId == i) {
+                    // Player is unselecting first tile
+                    selectedId = -1;
+                    setSelected(view, false);
+                } else {
+                    // Player is selecting second tile
+                    setSelected(view, true);
+                    checkCardMatch(selectedId, i);
+                }
+            }
+        });
+    }
+
+    protected void updateGridView() {
+        mGridAdapter.updateImages(imgFiles);
     }
 
     protected void initGame() {
@@ -141,7 +175,7 @@ public class GameActivity extends AppCompatActivity {
             // TODO: ANIMATE GREEN TINT
             // TODO: Play SFX_SUCCESS
             // TODO: Disable ImageViews
-            Toast.makeText(this, "CORRECT", Toast.LENGTH_LONG).show();
+
             score++;
             updateScore(score);
 
@@ -151,35 +185,8 @@ public class GameActivity extends AppCompatActivity {
         } else {
             // TODO: ANIMATE RED TINT
             // TODO: Play SFX_FAILURE
-            Toast.makeText(this, "WRONG", Toast.LENGTH_LONG).show();
+
         }
     }
 
-    // TODO: REFACTOR THIS
-    protected void updateGridView() {
-        GridAdapter adapter = new GridAdapter(this, imgFiles);
-        GridView gridView = findViewById(R.id.gridView);
-        if (gridView != null) {
-            gridView.setAdapter(adapter);
-            gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-                @Override
-                public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                    // Gameplay
-                    if (selectedId == -1) {
-                        // Player is selecting first tile
-                        selectedId = i;
-                        setSelected(view, true);
-                    } else if (selectedId == i) {
-                        // Player is unselecting first tile
-                        selectedId = -1;
-                        setSelected(view, false);
-                    } else {
-                        // Player is selecting second tile
-                        setSelected(view, true);
-                        checkCardMatch(selectedId, i);
-                    }
-                }
-            });
-        }
-    }
 }
