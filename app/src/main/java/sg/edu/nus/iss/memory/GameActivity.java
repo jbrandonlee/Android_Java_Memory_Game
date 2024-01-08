@@ -3,7 +3,13 @@ package sg.edu.nus.iss.memory;
 import android.animation.AnimatorInflater;
 import android.animation.AnimatorSet;
 import android.content.Intent;
+import android.graphics.Color;
+import android.graphics.PorterDuff;
+import android.media.AudioAttributes;
+import android.media.AudioManager;
 import android.media.MediaPlayer;
+import android.media.SoundPool;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
@@ -11,6 +17,7 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.GridView;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.ViewFlipper;
 
@@ -36,6 +43,8 @@ public class GameActivity extends AppCompatActivity {
 
     private AnimatorSet inLeftSet;
     private MediaPlayer bgmPlayer;
+    private SoundPool soundPool;
+    private int sfx_flip, sfx_unflip, sfx_match, sfx_win, sfx_lose;
 
     private final int MAX_SCORE = 6;
     private int score = 0;
@@ -47,6 +56,7 @@ public class GameActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_game);
+        initSoundPool();
         initViews();
         initGame();
     }
@@ -56,6 +66,7 @@ public class GameActivity extends AppCompatActivity {
         super.onStart();
         bgmPlayer = MediaPlayer.create(this, R.raw.bgm_game);
         bgmPlayer.setLooping(true);
+        bgmPlayer.setVolume(0.5f,0.5f);
         bgmPlayer.start();
     }
 
@@ -66,6 +77,27 @@ public class GameActivity extends AppCompatActivity {
         bgmPlayer.release();
     }
 
+    protected void initSoundPool() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            AudioAttributes audioAttributes =
+                    new AudioAttributes.Builder()
+                            .setUsage(AudioAttributes.USAGE_GAME)
+                            .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                            .build();
+            soundPool = new SoundPool.Builder()
+                                .setMaxStreams(5)
+                                .setAudioAttributes(audioAttributes)
+                                .build();
+        } else {
+            soundPool = new SoundPool(3, AudioManager.STREAM_MUSIC,0);
+        }
+        sfx_flip = soundPool.load(this, R.raw.sfx_flip, 1);
+        sfx_unflip = soundPool.load(this, R.raw.sfx_unflip, 1);
+        sfx_match = soundPool.load(this, R.raw.sfx_match, 1);
+        sfx_win = soundPool.load(this, R.raw.sfx_win, 1);
+        sfx_lose = soundPool.load(this, R.raw.sfx_lose, 1);
+    }
+
     protected void initViews() {
         initGridAdapter();
         mTimerText = findViewById(R.id.timerText);
@@ -74,7 +106,6 @@ public class GameActivity extends AppCompatActivity {
         mEndButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                // TODO: Prompt player before ending game with AlertDialog.Builder
                 endGame();
             }
         });
@@ -89,7 +120,7 @@ public class GameActivity extends AppCompatActivity {
         mGridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                System.out.println("Item clicked: " + i);
+                soundPool.play(sfx_flip, 1,1,0,0,1);
                 flipCard(view);
 
                 // Gameplay
@@ -149,43 +180,61 @@ public class GameActivity extends AppCompatActivity {
 
     // -- Game Logic --
     protected void endGame() {
+        int delay;
+        gameRunning = false;
+        mEndButton.setEnabled(false);
+        bgmPlayer.pause();
         if (score == MAX_SCORE) {
-            // TODO: Play SFX_SUCCESS_LONG
+            delay = 2000;
+            soundPool.play(sfx_win, 1,1,0,0,1);
         } else {
-            // TODO: Play SFX_FAILURE_LONG
+            delay = 1000;
+            soundPool.play(sfx_lose, 1,1,0,0,1);
         }
-        finish();
+        Handler handler = new Handler();
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                finish();
+            }
+        }, delay);
     }
 
     protected void checkCardMatch(int firstId, int secondId) {
         System.out.println("Checking: " + firstId + " and " + secondId);
+        View first = mGridView.getChildAt(firstId);
+        View second = mGridView.getChildAt(secondId);
+        ImageView firstImage = first.findViewById(R.id.front);
+        ImageView secondImage = second.findViewById(R.id.front);
         selectedId = -1;
 
         if (gridAnswers.get(firstId) == gridAnswers.get(secondId)) {
-            // TODO: ANIMATE GREEN TINT
-            // TODO: Play SFX_SUCCESS
-            // Disable ImageViews
-            mGridView.getChildAt(firstId).setOnClickListener(null);
-            mGridView.getChildAt(secondId).setOnClickListener(null);
-
+            // Successful Match - Play SFX_MATCH, Tint Inactive, Disable ImageViews OnClick
+            soundPool.play(sfx_match, 1,1,0,0,1);
+            firstImage.setColorFilter(Color.parseColor("#AAFFFFFF"), PorterDuff.Mode.MULTIPLY);
+            secondImage.setColorFilter(Color.parseColor("#AAFFFFFF"), PorterDuff.Mode.MULTIPLY);
+            first.setOnClickListener(null);
+            second.setOnClickListener(null);
             score++;
             updateScore(score);
-
             if (score == MAX_SCORE) {
                 endGame();
             }
         } else {
-            // TODO: ANIMATE RED TINT
-            // TODO: Play SFX_FAILURE
-            // Add delay before flipping back
+            // Unsuccessful Match - Tint Error, Wait, Play SFX_UNFLIP, Flip and Untint
+            firstImage.setColorFilter(Color.parseColor("#DDFFCCCC"), PorterDuff.Mode.MULTIPLY);
+            secondImage.setColorFilter(Color.parseColor("#DDFFCCCC"), PorterDuff.Mode.MULTIPLY);
             Handler handler = new Handler();
             handler.postDelayed(new Runnable() {
                 @Override
                 public void run() {
+                    soundPool.play(sfx_unflip, 1,1,0,0,1);
                     flipCard(mGridView.getChildAt(firstId));
                     flipCard(mGridView.getChildAt(secondId));
+                    firstImage.clearColorFilter();
+                    secondImage.clearColorFilter();
                 }
-            }, 500);
+            }, 600);
         }
     }
 

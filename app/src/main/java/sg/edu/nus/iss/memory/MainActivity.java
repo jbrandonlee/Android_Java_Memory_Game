@@ -52,17 +52,12 @@ public class MainActivity extends AppCompatActivity {
 
     private MediaPlayer bgmPlayer;
 
-    // -- Demo Details --
-    // Insufficient Images:  https://blank.page/
-    // Connection Failed: https://qwerty/
-    // Working: https://stocksnap.io/
-    // Working: https://www.istockphoto.com/photos/new-year
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         initViews();
+        // debugMode(1);
     }
 
     @Override
@@ -70,6 +65,7 @@ public class MainActivity extends AppCompatActivity {
         super.onStart();
         bgmPlayer = MediaPlayer.create(this, R.raw.bgm_main);
         bgmPlayer.setLooping(true);
+        bgmPlayer.setVolume(0.5f,0.5f);
         bgmPlayer.start();
     }
 
@@ -78,6 +74,28 @@ public class MainActivity extends AppCompatActivity {
         super.onStop();
         bgmPlayer.stop();
         bgmPlayer.release();
+    }
+
+    protected void debugMode(int mode) {
+        String url_working_1 = "https://stocksnap.io/";
+        String url_working_2 = "https://www.istockphoto.com/photos/new-year";
+        String url_insufficient = "https://blank.page/";
+        String url_connection_failed = "https://qwerty/";
+
+        switch (mode) {
+            case 1:
+                mUrlField.setText(url_working_1);
+                break;
+            case 2:
+                mUrlField.setText(url_working_2);
+                break;
+            case 3:
+                mUrlField.setText(url_insufficient);
+                break;
+            case 4:
+                mUrlField.setText(url_connection_failed);
+                break;
+        }
     }
 
     // -- Initialize Views --
@@ -129,7 +147,7 @@ public class MainActivity extends AppCompatActivity {
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
                 if (!selectedIds.contains(i)) {
                     selectedIds.add(i);
-                    view.setBackgroundColor(Color.parseColor("#BF4F51"));
+                    view.setBackgroundColor(Color.parseColor("#C23639"));
                 } else {
                     selectedIds.remove(Integer.valueOf(i));
                     view.setBackgroundColor(Color.TRANSPARENT);
@@ -263,7 +281,7 @@ public class MainActivity extends AppCompatActivity {
 
     protected void updateProgress(int count) {
         mDownloadProgress.setVisibility(View.VISIBLE);
-        mDownloadProgress.setProgress(MAX_IMAGES);
+        mDownloadProgress.setProgress(count);
         mDownloadText.setText("Downloading... " + count + "/" + MAX_IMAGES);
 
         if (count == MAX_IMAGES) {
@@ -303,4 +321,5 @@ public class MainActivity extends AppCompatActivity {
             }
         });
     }
+
 }

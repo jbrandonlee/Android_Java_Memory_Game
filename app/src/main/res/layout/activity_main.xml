@@ -19,9 +19,6 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" >
 
-        <!-- https://stocksnap.io/ -->
-        <!-- https://www.istockphoto.com/photos/new-year -->
-
         <EditText
             android:id="@+id/urlField"
             android:layout_width="0dp"
@@ -29,7 +26,6 @@
             android:layout_weight="1"
             android:background="@drawable/input_field_border"
             android:hint="@string/url_field_hint"
-            android:text="https://stocksnap.io/"
             android:textSize="14sp"
             android:paddingHorizontal="10dp"
             android:paddingVertical="5dp" />
