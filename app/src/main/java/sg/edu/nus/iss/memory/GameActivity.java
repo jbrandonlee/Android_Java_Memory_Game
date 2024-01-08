@@ -1,7 +1,8 @@
 package sg.edu.nus.iss.memory;
 
+import android.animation.AnimatorInflater;
+import android.animation.AnimatorSet;
 import android.content.Intent;
-import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
@@ -10,6 +11,7 @@ import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.GridView;
 import android.widget.TextView;
+import android.widget.ViewFlipper;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -25,11 +27,13 @@ public class GameActivity extends AppCompatActivity {
     private List<Integer> gridAnswers = new ArrayList<>();
     private List<File> imgFiles = new ArrayList<>();
 
-    private GridAdapter mGridAdapter;
+    private GridFlipAdapter mGridAdapter;
     private GridView mGridView;
     private TextView mTimerText;
     private TextView mScoreText;
     private Button mEndButton;
+
+    private AnimatorSet inLeftSet;
 
     private final int MAX_SCORE = 6;
     private int score = 0;
@@ -60,32 +64,38 @@ public class GameActivity extends AppCompatActivity {
     }
 
     protected void initGridAdapter() {
-        mGridAdapter = new GridAdapter(this, imgFiles);
+        inLeftSet = (AnimatorSet) AnimatorInflater.loadAnimator(
+                this, R.animator.card_flip_left_in);
+        mGridAdapter = new GridFlipAdapter(this, imgFiles);
         mGridView = findViewById(R.id.gridView);
         mGridView.setAdapter(mGridAdapter);
         mGridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                System.out.println("Item clicked: " + i);
+                flipCard(view);
+
                 // Gameplay
                 if (selectedId == -1) {
                     // Player is selecting first tile
                     selectedId = i;
-                    setSelected(view, true);
                 } else if (selectedId == i) {
                     // Player is unselecting first tile
                     selectedId = -1;
-                    setSelected(view, false);
                 } else {
                     // Player is selecting second tile
-                    setSelected(view, true);
                     checkCardMatch(selectedId, i);
                 }
             }
         });
     }
 
-    protected void updateGridView() {
-        mGridAdapter.updateImages(imgFiles);
+    protected void flipCard(View gridItem) {
+        ViewFlipper flipper = gridItem.findViewById(R.id.view_flipper);
+        inLeftSet.end();
+        flipper.showNext();
+        inLeftSet.setTarget(flipper.getCurrentView());
+        inLeftSet.start();
     }
 
     protected void initGame() {
@@ -97,43 +107,6 @@ public class GameActivity extends AppCompatActivity {
         updateTimer(0);
         gameRunning = true;
         runTimer();
-    }
-
-    protected void endGame() {
-        if (score == MAX_SCORE) {
-            // TODO: Play SFX_SUCCESS_LONG
-        } else {
-            // TODO: Play SFX_FAILURE_LONG
-        }
-        finish();
-    }
-
-    protected void runTimer() {
-        Handler handler = new Handler();
-        handler.post(new Runnable() {
-            @Override
-            public void run() {
-                if (gameRunning) {
-                    seconds++;
-                }
-                updateTimer(seconds);
-                handler.postDelayed(this, 1000);
-            }
-        });
-    }
-
-    protected void updateTimer(int seconds) {
-        this.seconds = seconds;
-        int hours = seconds / 3600;
-        int minutes = (seconds % 3600) / 60;
-        int secs = seconds % 60;
-        String time = String.format(Locale.getDefault(),"%02d:%02d:%02d", hours, minutes, secs);
-        mTimerText.setText(time);
-    }
-
-    protected void updateScore(int score) {
-        this.score = score;
-        mScoreText.setText(score + " out of 6 matches");
     }
 
     protected void getDataFromIntent() {
@@ -157,24 +130,26 @@ public class GameActivity extends AppCompatActivity {
         }
     }
 
-    protected void setSelected(View view, boolean selected) {
-        if (selected) {
-            view.setBackgroundColor(Color.parseColor("#BF4F51"));
+    // -- Game Logic --
+    protected void endGame() {
+        if (score == MAX_SCORE) {
+            // TODO: Play SFX_SUCCESS_LONG
         } else {
-            view.setBackgroundColor(Color.TRANSPARENT);
+            // TODO: Play SFX_FAILURE_LONG
         }
+        finish();
     }
 
     protected void checkCardMatch(int firstId, int secondId) {
-        GridView gridView = findViewById(R.id.gridView);
-        gridView.getChildAt(firstId).setBackgroundColor(Color.TRANSPARENT);
-        gridView.getChildAt(secondId).setBackgroundColor(Color.TRANSPARENT);
+        System.out.println("Checking: " + firstId + " and " + secondId);
         selectedId = -1;
 
         if (gridAnswers.get(firstId) == gridAnswers.get(secondId)) {
             // TODO: ANIMATE GREEN TINT
             // TODO: Play SFX_SUCCESS
-            // TODO: Disable ImageViews
+            // Disable ImageViews
+            mGridView.getChildAt(firstId).setOnClickListener(null);
+            mGridView.getChildAt(secondId).setOnClickListener(null);
 
             score++;
             updateScore(score);
@@ -185,8 +160,48 @@ public class GameActivity extends AppCompatActivity {
         } else {
             // TODO: ANIMATE RED TINT
             // TODO: Play SFX_FAILURE
-
+            // Add delay before flipping back
+            Handler handler = new Handler();
+            handler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    flipCard(mGridView.getChildAt(firstId));
+                    flipCard(mGridView.getChildAt(secondId));
+                }
+            }, 1000);
         }
     }
 
+    // -- View Management --
+    protected void runTimer() {
+        Handler handler = new Handler();
+        handler.post(new Runnable() {
+            @Override
+            public void run() {
+                if (gameRunning) {
+                    seconds++;
+                }
+                updateTimer(seconds);
+                handler.postDelayed(this, 1000);
+            }
+        });
+    }
+
+    protected void updateTimer(int seconds) {
+        this.seconds = seconds;
+        int hours = seconds / 3600;
+        int minutes = (seconds % 3600) / 60;
+        int secs = seconds % 60;
+        String time = String.format(Locale.getDefault(),"%02d:%02d:%02d", hours, minutes, secs);
+        mTimerText.setText(time);
+    }
+
+    protected void updateGridView() {
+        mGridAdapter.updateImages(imgFiles);
+    }
+
+    protected void updateScore(int score) {
+        this.score = score;
+        mScoreText.setText(score + " out of 6 matches");
+    }
 }
