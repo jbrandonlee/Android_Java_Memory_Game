@@ -160,6 +160,7 @@ public class MainActivity extends AppCompatActivity {
 
     // -- Image Download --
     protected void getImgUrlfromWeb(String webUrl) {
+        if (webUrl.isEmpty()) { return; }
         resetDataAndView();
 
         urlThread = new Thread(new Runnable() {
@@ -178,7 +179,7 @@ public class MainActivity extends AppCompatActivity {
 
                         String src = elem.absUrl("src");
                         if (isValidImgSrc(src)) {
-                            // System.out.println("Found Image: " + src);
+                            System.out.println("Found Image: " + src);
                             imgUrls.add(src);
                         }
 
@@ -187,6 +188,10 @@ public class MainActivity extends AppCompatActivity {
                             startDownloadImages(imgUrls);
                             break;
                         }
+                    }
+                    // Display error if insufficient images
+                    if (imgUrls.size() < MAX_IMAGES) {
+                        makeUIThreadToast("Insufficient images in URL: " + imgUrls.size() + " images found");
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -198,12 +203,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     protected void startDownloadImages(List<String> imgUrls) {
-        // Check if there are sufficient images to download
-        if (imgUrls.size() < MIN_IMAGES) {
-            makeUIThreadToast("Insufficient images in URL: " + imgUrls.size());
-            return;
-        }
-
         fileThread = new Thread(new Runnable() {
             @Override
             public void run() {
