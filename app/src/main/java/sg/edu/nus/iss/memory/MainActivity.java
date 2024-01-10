@@ -265,6 +265,8 @@ public class MainActivity extends AppCompatActivity {
     protected void resetDataAndView() {
         imgUrls.clear();
         imgFiles.clear();
+        selectedIds.clear();
+        updateSelected(selectedIds.size());
         updateGridView();
         mDownloadText.setText("");
         mDownloadProgress.setVisibility(View.INVISIBLE);

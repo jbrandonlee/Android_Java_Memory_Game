@@ -120,6 +120,10 @@ public class GameActivity extends AppCompatActivity {
         mGridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                // Do nothing if player clicks on selected tile
+                if (i == selectedId) { return; }
+
+                // Play SFX and Animate
                 soundPool.play(sfx_flip, 1,1,0,0,1);
                 flipCard(view);
 
@@ -127,9 +131,6 @@ public class GameActivity extends AppCompatActivity {
                 if (selectedId == -1) {
                     // Player is selecting first tile
                     selectedId = i;
-                } else if (selectedId == i) {
-                    // Player is unselecting first tile
-                    selectedId = -1;
                 } else {
                     // Player is selecting second tile
                     checkCardMatch(selectedId, i);
